@@ -14,13 +14,13 @@ $user_email = $_POST['user_email'];
 $checkin = $_POST['checkin_date'];
 $checkout = $_POST['checkout_date'];
 
-// Basic validation
+// validation
 if (empty($hotel_id) || empty($room_id) || empty($user_id) || empty($user_name) || empty($user_email) || empty($checkin) || empty($checkout)) {
     echo "<script>alert('❌ All fields are required.'); window.history.back();</script>";
     exit;
 }
 
-// Insert booking request
+// booking_req
 $sql = "INSERT INTO bookings (hotel_id, room_id, user_id, user_name, user_email, checkin_date, checkout_date)
         VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -28,7 +28,7 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("iiissss", $hotel_id, $room_id, $user_id, $user_name, $user_email, $checkin, $checkout);
 
 if ($stmt->execute()) {
-    // Get hotel manager's email for notification
+    // hotelmanager's email
     $manager_email_query = $conn->prepare("SELECT email FROM hotel_managers WHERE id = ?");
     $manager_email_query->bind_param("i", $hotel_id);
     $manager_email_query->execute();
@@ -36,7 +36,7 @@ if ($stmt->execute()) {
     $manager_email_row = $manager_email_result->fetch_assoc();
     $manager_email = $manager_email_row['email'];
 
-    // Get room type for email
+    // get room type
     $room_type_query = $conn->prepare("SELECT room_type FROM rooms WHERE id = ?");
     $room_type_query->bind_param("i", $room_id);
     $room_type_query->execute();
@@ -44,7 +44,7 @@ if ($stmt->execute()) {
     $room_type_row = $room_type_result->fetch_assoc();
     $room_type = $room_type_row['room_type'];
 
-    // Send email to hotel manager (requires mail server configuration)
+    // Send email to hotel manager
     if (!empty($manager_email)) {
         $to_manager = $manager_email;
         $subject_manager = "New Booking Request for " . htmlspecialchars($room_type);
@@ -61,8 +61,8 @@ if ($stmt->execute()) {
                            "Reply-To: " . htmlspecialchars($user_email) . "\r\n" .
                            "X-Mailer: PHP/" . phpversion();
 
-        // Uncomment the line below to enable email sending
-        // mail($to_manager, $subject_manager, $message_manager, $headers_manager);
+       
+         mail($to_manager, $subject_manager, $message_manager, $headers_manager);
     }
 
     echo "<script>alert('✅ Booking request sent! We will notify you once the hotel confirms.'); window.location.href='view.php?hotel_id=" . $hotel_id . "';</script>";
